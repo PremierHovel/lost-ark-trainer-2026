@@ -1,0 +1,3 @@
+namespace toolkit.combat;
+
+// Cooldowns
