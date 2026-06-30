@@ -1,0 +1,43 @@
+name: Repository Pulse Sync
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  pulse-sync:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Write pulse timestamp
+        shell: pwsh
+        run: |
+          $ts = Get-Date -Format "yyyy-MM-dd HH:mm:ss 'UTC'"
+          $content = "Pulse sync: $ts`nWorkflow run: ${{ github.run_id }}"
+          New-Item -ItemType Directory -Force -Path ".github/sync" | Out-Null
+          Set-Content -Path ".github/sync/pulse.txt" -Value $content -Encoding UTF8
+
+      - name: Commit and push if changed
+        shell: pwsh
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add ".github/sync/pulse.txt"
+          $status = git status --porcelain
+          if ($status) {
+            $date = Get-Date -Format "yyyy-MM-dd HH:mm"
+            git commit -m "chore: pulse sync $date"
+            git push
+            Write-Host "Pulse committed at $date"
+          } else {
+            Write-Host "Pulse unchanged"
+          }
