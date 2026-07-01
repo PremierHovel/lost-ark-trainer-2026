@@ -99,3 +99,4 @@ Both clients share the same offset profile in `presets/raids/index.json`.
 </details>
 
 [LICENSE](LICENSE)
+⁤
